@@ -27,7 +27,35 @@
         <section id="shisha-content">
             <h1 class="mainly-contents">シーシャ</h1>
             <h3>シーシャの評価を新規登録</h3>
+            <button id="toggle-form">フォームを表示/非表示</button>
+            <form id="shisha-form" style="display: none;">
+                <label for="flavor-type">フレーバーのカテゴリ</label>
+                <select id="flavor-type" name="flavor-type">
+                    <!-- JavaScriptで選択肢を動的に追加 -->
+                </select>
+
+                <label for="flavor-name">フレーバーの名前</label>
+                <select id="flavor-name" name="flavor-name">
+                    <!-- JavaScriptで選択肢を動的に追加 -->
+                </select>
+
+                <label for="flavor-rating">評価</label>
+                <div id="star-rating">
+                    <span class="star" data-value="1">☆</span>
+                    <span class="star" data-value="2">☆</span>
+                    <span class="star" data-value="3">☆</span>
+                    <span class="star" data-value="4">☆</span>
+                    <span class="star" data-value="5">☆</span>
+                </div>
+                <input type="hidden" id="flavor-rating" name="flavor-rating">
+
+                <label for="flavor-comment">コメント</label>
+                <textarea id="flavor-comment" name="flavor-comment"></textarea>
+
+                <input type="submit" value="登録">
+            </form>
             <h3>評価一覧</h3>
+            <ul id="flavor-list"></ul>
         </section>
     </div>
     <div class="footer">

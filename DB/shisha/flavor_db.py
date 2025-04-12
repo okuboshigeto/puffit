@@ -25,6 +25,20 @@ cursor.execute(
     """,
 )
 
+cursor.execute(
+    """
+CREATE TABLE IF NOT EXISTS user_ratings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    flavor_type INTEGER NOT NULL,
+    flavor_name INTEGER NOT NULL,
+    flavor_rating INTEGER NOT NULL,
+    flavor_comment TEXT,
+    FOREIGN KEY (flavor_type) REFERENCES flavor_type(id),
+    FOREIGN KEY (flavor_name) REFERENCES shisha_flavor(id)
+    ) 
+    """,
+)
+
 type_names = [
     ("Fruits",),
     ("MINT",),

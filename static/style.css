@@ -65,3 +65,97 @@
     color: #fff;
     padding: 10px 0;
 }
+
+form {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    display: none; /* 初期状態では非表示 */
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+form input[type="number"],
+form textarea,
+form select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+form input[type="submit"] {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form input[type="submit"]:hover {
+    background-color: #218838;
+}
+
+#flavor-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#flavor-list li {
+    background-color: #f1f1f1;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#toggle-form {
+    width: 100%; /* フォームと同じ幅に設定 */
+    background-color: #f9f9f9; /* フォームと同じ背景色 */
+    color: #333; /* テキスト色をフォームに合わせる */
+    border: 1px solid #ccc; /* フォームと同じボーダー */
+    padding: 10px 20px;
+    border-radius: 8px; /* フォームと同じ角丸 */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+    display: block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* フォームと同じ影 */
+}
+
+#toggle-form:hover {
+    background-color: #e0e0e0; /* ホバー時の背景色を少し濃く */
+}
+
+#star-rating {
+    display: flex;
+    justify-content: center; /* 中央寄せ */
+    gap: 5px;
+    cursor: pointer;
+}
+
+.star {
+    font-size: 24px;
+    color: #ccc;
+    transition: color 0.2s ease;
+}
+
+.star.selected,
+.star:hover,
+.star:hover ~ .star {
+    color: #ffcc00;
+}
+
+.star:hover ~ .star {
+    color: #ccc; /* ホバー時に右側の星を元の色に戻す */
+}
