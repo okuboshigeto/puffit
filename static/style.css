@@ -18,16 +18,42 @@
     gap: 20px;
 }
 
+.header-menu a{
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.header-menu a:hover{
+    background-color: #0056b3;
+}
+
+
 .header-menu li {
     list-style: none;
     float: left;
     margin: 20px;
 }
 
-
 .main {
     padding: 20px;
     text-align: center;
+}
+
+#tabacco-content, #shisha-content {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    display: none; /* 初期状態では非表示 */
+}
+
+#tabacco-content.active, #shisha-content.active {
+    display: block; /* アクティブな状態で表示 */
+    opacity: 1;
 }
 
 .mainly-contents {
