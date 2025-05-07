@@ -1,7 +1,7 @@
 // 評価一覧ページ
 
 'use client'
-import FlavorList from '@/components/FlavorList';
+import FlavorList from '@/components/shisha/FlavorList';
 import { FaHistory } from 'react-icons/fa';
 
 export default function ListPage() {

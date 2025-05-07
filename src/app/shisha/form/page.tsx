@@ -1,7 +1,7 @@
 // 新規登録ページ
 
 'use client'
-import FlavorForm from '@/components/FlavorForm';
+import FlavorForm from '@/components/shisha/FlavorForm';
 import { FaPlus } from 'react-icons/fa';
 
 export default function NewPage() {

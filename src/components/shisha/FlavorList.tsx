@@ -117,7 +117,7 @@ export default function FlavorList() {
         <Link href="/" className="flex-1 bg-gray-500 text-white px-2 sm:px-4 py-2 rounded hover:bg-gray-600 text-center whitespace-nowrap">
           トップページへ戻る
         </Link>
-        <Link href="/new" className="flex-1 bg-blue-500 text-white px-2 sm:px-4 py-2 rounded hover:bg-blue-600 text-center whitespace-nowrap">
+        <Link href="../shisha/form" className="flex-1 bg-blue-500 text-white px-2 sm:px-4 py-2 rounded hover:bg-blue-600 text-center whitespace-nowrap">
           新規登録
         </Link>
       </div>

@@ -16,7 +16,7 @@ export default function Home() {
 
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
           <Link 
-            href='/new' 
+            href='/shisha/form' 
             className='group p-4 sm:p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 active:scale-95'
           >
             <div className='flex flex-col items-center space-y-3 sm:space-y-4'>
@@ -31,7 +31,7 @@ export default function Home() {
           </Link>
 
           <Link 
-            href='/list' 
+            href='/shisha/list' 
             className='group p-4 sm:p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 active:scale-95'
           >
             <div className='flex flex-col items-center space-y-3 sm:space-y-4'>
