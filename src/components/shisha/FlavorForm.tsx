@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaCalendar } from 'react-icons/fa';
@@ -9,12 +9,37 @@ type FlavorItem = {
   brand: string;
 };
 
-export default function FlavorForm() {
+type Review = {
+  id: number;
+  date: string;
+  flavors: FlavorItem[];
+  rating: number;
+  memo: string;
+};
+
+interface FlavorFormProps {
+  reviewId?: number;
+}
+
+export default function FlavorForm({ reviewId }: FlavorFormProps) {
   const [flavors, setFlavors] = useState<FlavorItem[]>([{ flavor: '', brand: '' }]);
   const [rating, setRating] = useState(3);
   const [memo, setMemo] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const router = useRouter();
+
+  useEffect(() => {
+    if (reviewId) {
+      const reviews = JSON.parse(localStorage.getItem('shishaReviews') || '[]');
+      const review = reviews.find((r: Review) => r.id === reviewId);
+      if (review) {
+        setFlavors(review.flavors);
+        setRating(review.rating);
+        setMemo(review.memo);
+        setDate(review.date);
+      }
+    }
+  }, [reviewId]);
 
   const handleFlavorChange = (index: number, field: keyof FlavorItem, value: string) => {
     const newFlavors = [...flavors];
@@ -29,15 +54,26 @@ export default function FlavorForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newEntry = {
-      id: Date.now(),
+      id: reviewId || Date.now(),
       date,
-      flavors: flavors.filter(f => f.flavor.trim() !== ''), // 空のフレーバーを除外
+      flavors: flavors.filter(f => f.flavor.trim() !== ''),
       rating,
       memo
     };
     const existing = JSON.parse(localStorage.getItem('shishaReviews') || '[]');
-    localStorage.setItem('shishaReviews', JSON.stringify([...existing, newEntry]));
-    router.push('../shisha/list');
+    
+    if (reviewId) {
+      // 編集の場合
+      const updatedReviews = existing.map((review: Review) => 
+        review.id === reviewId ? newEntry : review
+      );
+      localStorage.setItem('shishaReviews', JSON.stringify(updatedReviews));
+    } else {
+      // 新規作成の場合
+      localStorage.setItem('shishaReviews', JSON.stringify([...existing, newEntry]));
+    }
+    
+    router.push('/shisha/list');
   };
 
   return (

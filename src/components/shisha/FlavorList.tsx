@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaEdit } from 'react-icons/fa';
 
 type FlavorItem = {
   flavor: string;
@@ -90,19 +90,26 @@ export default function FlavorList() {
             className="relative border p-4 rounded shadow-sm overflow-hidden"
             onTouchStart={(e) => handleTouchStart(e, review.id)}
           >
-            <div className={`transition-transform duration-300 ${swipedId === review.id ? '-translate-x-16' : ''}`}>
+            <div className={`transition-transform duration-300 ${swipedId === review.id ? '-translate-x-32' : ''}`}>
               <div className="flex justify-between items-start">
                 <h3 className="text-xl font-bold">
                   {review.flavors.map(f => 
                     f.brand ? `${f.flavor}（${f.brand}）` : f.flavor
                   ).join(' × ')}
                 </h3>
-                <span className="text-sm text-gray-500 sm:mr-16">{review.date}</span>
+                <span className="text-sm text-gray-500 sm:mr-32">{review.date}</span>
               </div>
               <p>評価: {review.rating}/5</p>
               {review.memo && <p className="text-gray-600">{review.memo}</p>}
             </div>
-            <div className={`absolute right-0 top-0 bottom-0 w-16 flex items-center justify-center bg-red-100 transition-opacity duration-300 sm:opacity-100 sm:pointer-events-auto ${swipedId === review.id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute right-0 top-0 bottom-0 w-32 flex items-center justify-center gap-2 bg-red-100 transition-opacity duration-300 sm:opacity-100 sm:pointer-events-auto ${swipedId === review.id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              <Link
+                href={`/shisha/edit/${review.id}`}
+                className="p-2 text-blue-500 hover:text-blue-700"
+              >
+                <FaEdit />
+              </Link>
+              <div className="h-6 border-l border-gray-300"></div>
               <button
                 onClick={() => handleDelete(review.id)}
                 className="p-2 text-red-500 hover:text-red-700"
