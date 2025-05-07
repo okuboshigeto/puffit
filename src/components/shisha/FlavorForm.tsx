@@ -37,7 +37,7 @@ export default function FlavorForm() {
     };
     const existing = JSON.parse(localStorage.getItem('shishaReviews') || '[]');
     localStorage.setItem('shishaReviews', JSON.stringify([...existing, newEntry]));
-    router.push('/list');
+    router.push('../shisha/list');
   };
 
   return (
