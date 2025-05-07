@@ -34,8 +34,17 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const reviews = await prisma.shishaReview.findMany({
-      include: {
+      select: {
+        id: true,
+        reviewId: true,
+        rating: true,
+        memo: true,
+        date: true,
+        createdAt: true,
+        updatedAt: true,
         flavors: true,
+        isPublic: true,
+        shareCount: true,
         user: {
           select: {
             name: true,
