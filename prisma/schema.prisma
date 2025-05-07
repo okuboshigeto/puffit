@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザーモデル
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  reviews       ShishaReview[]
+}
+
+// シーシャレビューモデル
+model ShishaReview {
+  id          String   @id @default(cuid())
+  // 識別情報
+  reviewId    Int      @unique @default(autoincrement()) // 通し番号（共有用）
+  // ユーザー情報
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  // 評価情報
+  rating      Int      // 総合評価（1-5）
+  memo        String?  // メモ
+  // 日付情報
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // フレーバー情報
+  flavors     ShishaFlavor[]
+  // 共有関連
+  isPublic    Boolean  @default(true)  // 公開設定
+  shareCount  Int      @default(0)     // 共有回数
+}
+
+// シーシャフレーバーモデル（レビューの中の個別フレーバー）
+model ShishaFlavor {
+  id          String   @id @default(cuid())
+  brand       String?  // ブランド名（任意）
+  flavorName  String   // フレーバー名
+  // レビューとの関連
+  reviewId    String
+  review      ShishaReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  // メタデータ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
