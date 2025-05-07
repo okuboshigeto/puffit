@@ -50,25 +50,20 @@ export const Header = () => {
           )}
 
           {/* 右側のメニュー */}
-          <div className="flex items-center space-x-4">
-            {session ? (
-              <Link
-                href="/profile"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/profile')
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                プロフィール
-              </Link>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                ログイン
-              </Link>
+          <div className="flex items-center space-x-8">
+            {session && (
+              <div className="flex items-center">
+                <Link
+                  href="/profile"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive('/profile')
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
+                >
+                  プロフィール
+                </Link>
+              </div>
             )}
           </div>
         </div>
