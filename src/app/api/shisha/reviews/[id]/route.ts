@@ -12,7 +12,6 @@ export async function GET(
         id: params.id,
       },
       include: {
-        flavors: true,
         user: {
           select: {
             name: true,
@@ -48,13 +47,6 @@ export async function PUT(
     const body = await request.json()
     const { rating, memo, flavors, date } = body
 
-    // 既存のフレーバーを削除
-    await prisma.shishaFlavor.deleteMany({
-      where: {
-        reviewId: params.id,
-      },
-    })
-
     // レビューを更新
     const review = await prisma.shishaReview.update({
       where: {
@@ -64,15 +56,10 @@ export async function PUT(
         rating,
         memo,
         date: new Date(date),
-        flavors: {
-          create: flavors.map((flavor: { brand?: string; flavorName: string }) => ({
-            brand: flavor.brand,
-            flavorName: flavor.flavorName,
-          })),
-        },
-      },
-      include: {
-        flavors: true,
+        flavors: flavors.map((flavor: { brand?: string; flavorName: string }) => ({
+          brand: flavor.brand || null,
+          flavorName: flavor.flavorName,
+        })),
       },
     })
 

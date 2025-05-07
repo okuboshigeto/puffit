@@ -16,14 +16,15 @@ datasource db {
 
 // ユーザーモデル
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  reviews       ShishaReview[]
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?   // パスワードハッシュ
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  reviews        ShishaReview[]
 }
 
 // シーシャレビューモデル
@@ -41,22 +42,9 @@ model ShishaReview {
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  // フレーバー情報
-  flavors     ShishaFlavor[]
+  // フレーバー情報（JSON形式で保存）
+  flavors     Json     // [{ brand: string | null, flavorName: string }]
   // 共有関連
   isPublic    Boolean  @default(true)  // 公開設定
   shareCount  Int      @default(0)     // 共有回数
-}
-
-// シーシャフレーバーモデル（レビューの中の個別フレーバー）
-model ShishaFlavor {
-  id          String   @id @default(cuid())
-  brand       String?  // ブランド名（任意）
-  flavorName  String   // フレーバー名
-  // レビューとの関連
-  reviewId    String
-  review      ShishaReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  // メタデータ
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }

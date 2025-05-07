@@ -5,7 +5,7 @@ const nextConfig = {
   },
   // App Routerの設定
   experimental: {
-    appDir: true,
+    // appDir: true は削除（Next.js 13以降はデフォルトで有効）
   },
   // ルーティングの設定
   basePath: '',

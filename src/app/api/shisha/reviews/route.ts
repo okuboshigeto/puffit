@@ -13,15 +13,10 @@ export async function POST(request: Request) {
         rating,
         memo,
         date: new Date(date),
-        flavors: {
-          create: flavors.map((flavor: { brand?: string; flavorName: string }) => ({
-            brand: flavor.brand,
-            flavorName: flavor.flavorName,
-          })),
-        },
-      },
-      include: {
-        flavors: true,
+        flavors: flavors.map((flavor: { brand?: string; flavorName: string }) => ({
+          brand: flavor.brand || null,
+          flavorName: flavor.flavorName,
+        })),
       },
     })
 

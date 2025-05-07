@@ -3,8 +3,6 @@ import FlavorForm from '@/components/shisha/FlavorForm';
 import { FaEdit } from 'react-icons/fa';
 
 export default function EditPage({ params }: { params: { id: string } }) {
-  const reviewId = parseInt(params.id);
-
   return (
     <main className='min-h-screen bg-gradient-to-b from-gray-50 to-white p-6'>
       <div className='max-w-4xl mx-auto'>
@@ -17,7 +15,7 @@ export default function EditPage({ params }: { params: { id: string } }) {
             <div className='absolute -bottom-1 left-0 w-full h-0.5 bg-blue-100'></div>
           </div>
         </div>
-        <FlavorForm reviewId={reviewId} />
+        <FlavorForm reviewId={params.id} />
       </div>
     </main>
   );

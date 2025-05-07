@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaTrash, FaEdit } from 'react-icons/fa';
+import { useSession } from 'next-auth/react';
 
 type FlavorItem = {
   flavor: string;
@@ -9,78 +10,97 @@ type FlavorItem = {
 };
 
 type Review = {
-  id: number;
+  id: string;
   date: string;
   flavors: FlavorItem[];
   rating: number;
   memo: string;
 };
 
-// 古い形式のデータを新しい形式に変換する関数
-const convertToNewFormat = (data: any[]): Review[] => {
-  return data.map(item => {
-    // すでに新しい形式のデータの場合
-    if (item.flavors) {
-      return {
-        ...item,
-        date: item.date || new Date(item.id).toISOString().split('T')[0] // 日付がない場合はIDから生成
-      };
-    }
-    // 古い形式のデータを新しい形式に変換
-    return {
-      id: item.id,
-      date: new Date(item.id).toISOString().split('T')[0],
-      flavors: [{ flavor: item.flavor, brand: item.brand }],
-      rating: item.rating,
-      memo: item.memo
-    };
-  });
-};
-
 export default function FlavorList() {
+  const { data: session } = useSession();
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [swipedId, setSwipedId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [swipedId, setSwipedId] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('shishaReviews') || '[]');
-    const convertedData = convertToNewFormat(data);
-    setReviews(convertedData);
+    fetchReviews();
   }, []);
 
-  const handleDelete = (id: number) => {
-    const newReviews = reviews.filter(review => review.id !== id);
-    setReviews(newReviews);
-    localStorage.setItem('shishaReviews', JSON.stringify(newReviews));
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch('/api/shisha/reviews');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'レビューの取得に失敗しました');
+      }
+
+      setReviews(data.map((review: any) => ({
+        id: review.id,
+        date: new Date(review.date).toISOString().split('T')[0],
+        flavors: review.flavors.map((f: any) => ({
+          flavor: f.flavorName,
+          brand: f.brand || ''
+        })),
+        rating: review.rating,
+        memo: review.memo || ''
+      })));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'レビューの取得に失敗しました');
+      console.error(err);
+    }
   };
 
-  const handleTouchStart = (e: React.TouchEvent, id: number) => {
-    const touch = e.touches[0];
-    const startX = touch.clientX;
-    let currentX = startX;
+  const handleDelete = async (id: string) => {
+    if (!confirm('この評価を削除してもよろしいですか？')) {
+      return;
+    }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      currentX = touch.clientX;
-      const diff = startX - currentX;
-      
-      if (diff > 50) {
-        setSwipedId(id);
-      } else if (diff < -50) {
-        setSwipedId(null);
+    try {
+      const response = await fetch(`/api/shisha/reviews/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '削除に失敗しました');
       }
-    };
 
-    const handleTouchEnd = () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
+      setReviews(reviews.filter(review => review.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '削除に失敗しました');
+      console.error(err);
+    }
+  };
 
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', handleTouchEnd);
+  const handleTouchStart = (e: React.TouchEvent, id: string) => {
+    setTouchStart(e.touches[0].clientX);
+    setSwipedId(id);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+
+    const currentTouch = e.touches[0].clientX;
+    const diff = touchStart - currentTouch;
+
+    if (Math.abs(diff) < 50) {
+      setSwipedId(null);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStart(null);
   };
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="text-red-500 text-sm text-center">{error}</div>
+      )}
+
       {reviews.length === 0 ? (
         <p>まだ評価がありません。</p>
       ) : (
@@ -89,6 +109,8 @@ export default function FlavorList() {
             key={review.id} 
             className="relative border p-4 rounded shadow-sm overflow-hidden"
             onTouchStart={(e) => handleTouchStart(e, review.id)}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <div className={`transition-transform duration-300 ${swipedId === review.id ? '-translate-x-32' : ''}`}>
               <div className="flex justify-between items-start">
@@ -124,7 +146,7 @@ export default function FlavorList() {
         <Link href="/" className="flex-1 bg-gray-500 text-white px-2 sm:px-4 py-2 rounded hover:bg-gray-600 text-center whitespace-nowrap">
           トップページへ戻る
         </Link>
-        <Link href="../shisha/form" className="flex-1 bg-blue-500 text-white px-2 sm:px-4 py-2 rounded hover:bg-blue-600 text-center whitespace-nowrap">
+        <Link href="/shisha/form" className="flex-1 bg-blue-500 text-white px-2 sm:px-4 py-2 rounded hover:bg-blue-600 text-center whitespace-nowrap">
           新規登録
         </Link>
       </div>
