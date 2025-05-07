@@ -96,7 +96,7 @@ export default function FlavorForm({ reviewId }: FlavorFormProps) {
                 onChange={(e) => handleFlavorChange(index, 'flavor', e.target.value)}
                 className="border p-2 flex-1 rounded"
                 placeholder="フレーバー名"
-                required
+                required={index === 0}
               />
             </div>
           </div>
