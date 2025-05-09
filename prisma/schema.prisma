@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,37 +7,45 @@ datasource db {
   url      = env("STORAGE_DATABASE_URL")
 }
 
-// ユーザーモデル
 model User {
-  id             String    @id @default(cuid())
-  name           String?
-  email          String    @unique
-  emailVerified  DateTime?
-  image          String?
-  hashedPassword String?   // パスワードハッシュ
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  reviews        ShishaReview[]
+  id                       String         @id @default(cuid())
+  name                     String?
+  email                    String         @unique
+  emailVerified            DateTime?
+  image                    String?
+  hashedPassword           String?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  status                   String         @default("pending") @db.VarChar(20)
+  verificationToken        String?        @unique @db.Text
+  verificationTokenExpires DateTime?
+  reviews                  ShishaReview[]
 }
 
-// シーシャレビューモデル
 model ShishaReview {
-  id          String   @id @default(cuid())
-  // 識別情報
-  reviewId    Int      @unique @default(autoincrement()) // 通し番号（共有用）
-  // ユーザー情報
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  // 評価情報
-  rating      Int      // 総合評価（1-5）
-  memo        String?  // メモ
-  // 日付情報
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  // フレーバー情報（JSON形式で保存）
-  flavors     Json     // [{ brand: string | null, flavorName: string }]
-  // 共有関連
-  isPublic    Boolean  @default(true)  // 公開設定
-  shareCount  Int      @default(0)     // 共有回数
+  id         String   @id @default(cuid())
+  reviewId   Int      @unique @default(autoincrement())
+  userId     String
+  rating     Int
+  memo       String?
+  date       DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  flavors    Json
+  isPublic   Boolean  @default(true)
+  shareCount Int      @default(0)
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model PendingUser {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  name                    String
+  hashedPassword          String
+  verificationToken       String    @unique
+  verificationTokenExpires DateTime
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@map("pending_users")
 }

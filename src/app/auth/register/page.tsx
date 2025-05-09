@@ -42,7 +42,7 @@ export default function Register() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "登録に失敗しました")
+        throw new Error(data.error || data.details || "登録に失敗しました")
       }
 
       // 登録成功後、ログインページにリダイレクト
