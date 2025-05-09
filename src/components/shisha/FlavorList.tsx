@@ -176,23 +176,32 @@ function FlavorListContent() {
         method: 'POST',
       });
 
+      const review = reviews.find(r => r.id === id);
+      if (!review) {
+        throw new Error('Review not found');
+      }
+
+      const flavorText = review.flavors.map(f => 
+        f.brand ? `${f.flavor}（${f.brand}）` : f.flavor
+      ).join(' × ');
+
+      const shareUrl = `${window.location.origin}/shisha/share/${id}`;
       const shareData = {
-        title: 'シーシャレビュー',
-        text: reviews.find(r => r.id === id)?.flavors.map(f => 
-          f.brand ? `${f.flavor}（${f.brand}）` : f.flavor
-        ).join(' × '),
-        url: `${window.location.origin}/shisha/${id}`
+        title: 'シーシャのレビュー',
+        text: `${flavorText}\n\nPuffitでシーシャの評価を確認しましょう！`,
+        url: shareUrl
       };
 
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
         // Web Share APIがサポートされていない場合
-        await navigator.clipboard.writeText(shareData.url);
-        alert('URLをクリップボードにコピーしました');
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareUrl}`);
+        alert('フレーバー名とURLをクリップボードにコピーしました。\nPuffitでシーシャの評価を記録しましょう！');
       }
     } catch (err) {
       console.error('Error sharing review:', err);
+      alert('共有に失敗しました。');
     }
   };
 

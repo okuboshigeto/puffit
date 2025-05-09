@@ -10,6 +10,7 @@ export async function GET(
     const review = await prisma.shishaReview.findUnique({
       where: {
         id: params.id,
+        isPublic: true, // 公開設定のレビューのみ取得
       },
       include: {
         user: {
@@ -23,7 +24,7 @@ export async function GET(
 
     if (!review) {
       return NextResponse.json(
-        { error: 'Review not found' },
+        { error: 'Review not found or not public' },
         { status: 404 }
       )
     }

@@ -12,33 +12,31 @@ type ShareReviewProps = {
 export default function ShareReview({ reviewId, flavors, rating, memo, date, onShare }: ShareReviewProps) {
   // 共有ボタンを押したときの処理
   const handleShare = async () => {
-    const shareText = [
-      'シーシャの評価を共有します！',
-      flavors.map(f => f.brand ? `${f.flavor}（${f.brand}）` : f.flavor).join(' × '),
-      `評価: ${rating}/5`,
-      memo ? `\n${memo}` : '',
-      '\n#シーシャ #水タバコ'
-    ].join('\n');
-
+    console.log('Sharing review with ID:', reviewId);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    const flavorText = flavors.map(f => f.brand ? `${f.flavor}（${f.brand}）` : f.flavor).join(' × ');
     const shareData = {
-      title: 'シーシャの評価',
-      text: shareText,
-      url: `${window.location.origin}/shisha/${reviewId}`,
+      title: 'シーシャのレビュー',
+      text: `${flavorText}\n\nPuffitでシーシャの評価を記録しましょう！\n${baseUrl}/shisha/share/${reviewId}`,
+      url: `${baseUrl}/shisha/share/${reviewId}`,
     };
+    console.log('Share data:', shareData);
 
     if (navigator.share) {
       try {
         await navigator.share(shareData);
         onShare();
       } catch (error) {
+        console.error('Share error:', error);
         alert('共有に失敗しました。');
       }
     } else {
       // Web Share API非対応の場合はURLをコピー
       try {
-        await navigator.clipboard.writeText(shareData.url);
-        alert('URLをコピーしました。');
-      } catch {
+        await navigator.clipboard.writeText(shareData.text);
+        alert('フレーバー名とURLをクリップボードにコピーしました。\nPuffitでシーシャの評価を記録しましょう！');
+      } catch (error) {
+        console.error('Copy error:', error);
         alert('共有できませんでした。');
       }
     }

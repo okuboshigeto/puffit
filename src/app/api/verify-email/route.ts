@@ -3,22 +3,37 @@ import { prisma } from "@/lib/prisma";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+// 動的ルートとして設定
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get("token");
+    // request.urlが完全なURLであることを確認
+    if (!request.url) {
+      throw new Error('Request URL is undefined');
+    }
+
+    const url = new URL(request.url);
+    const token = url.searchParams.get("token");
 
     if (!token) {
-      return NextResponse.redirect(`${baseUrl}/auth/verify-email?error=missing_token`);
+      const redirectUrl = new URL('/auth/verify-email', baseUrl);
+      redirectUrl.searchParams.set('error', 'missing_token');
+      return NextResponse.redirect(redirectUrl);
     }
 
     const pendingUser = await prisma.pendingUser.findUnique({ where: { verificationToken: token } });
     if (!pendingUser) {
-      return NextResponse.redirect(`${baseUrl}/auth/verify-email?error=invalid_or_expired`);
+      const redirectUrl = new URL('/auth/verify-email', baseUrl);
+      redirectUrl.searchParams.set('error', 'invalid_or_expired');
+      return NextResponse.redirect(redirectUrl);
     }
+
     if (pendingUser.verificationTokenExpires < new Date()) {
       await prisma.pendingUser.delete({ where: { id: pendingUser.id } });
-      return NextResponse.redirect(`${baseUrl}/auth/verify-email?error=invalid_or_expired`);
+      const redirectUrl = new URL('/auth/verify-email', baseUrl);
+      redirectUrl.searchParams.set('error', 'invalid_or_expired');
+      return NextResponse.redirect(redirectUrl);
     }
 
     await prisma.user.create({
@@ -31,8 +46,12 @@ export async function GET(request: Request) {
     });
     await prisma.pendingUser.delete({ where: { id: pendingUser.id } });
 
-    return NextResponse.redirect(`${baseUrl}/auth/verify-success`);
+    const successUrl = new URL('/auth/verify-success', baseUrl);
+    return NextResponse.redirect(successUrl);
   } catch (error) {
-    return NextResponse.redirect(`${baseUrl}/auth/verify-email?error=server`);
+    console.error('Error in verify-email route:', error);
+    const errorUrl = new URL('/auth/verify-email', baseUrl);
+    errorUrl.searchParams.set('error', 'server');
+    return NextResponse.redirect(errorUrl);
   }
 }

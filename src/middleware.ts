@@ -18,10 +18,10 @@ export default withAuth(
 // 認証が必要なパスを指定
 export const config = {
   matcher: [
-    "/shisha/:path*",
+    "/shisha/((?!share).)*", // share以外のshisha配下のパス
     "/tobacco/:path*",
     "/profile/:path*",
-    "/api/shisha/:path*",
+    "/api/shisha/((?!reviews/[^/]+$).)*", // 共有用のAPIエンドポイント以外
     "/api/tobacco/:path*",
   ]
 } 
