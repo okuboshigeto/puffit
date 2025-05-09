@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { FaTrash, FaEdit } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaShare } from 'react-icons/fa';
 import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 type FlavorItem = {
   flavor: string;
@@ -38,6 +38,7 @@ type FilterState = {
 function FlavorListContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
@@ -167,6 +168,32 @@ function FlavorListContent() {
 
   const handleTouchEnd = () => {
     setTouchStart(null);
+  };
+
+  const handleShare = async (id: string) => {
+    try {
+      await fetch(`/api/shisha/reviews/${id}/share`, {
+        method: 'POST',
+      });
+
+      const shareData = {
+        title: 'シーシャレビュー',
+        text: reviews.find(r => r.id === id)?.flavors.map(f => 
+          f.brand ? `${f.flavor}（${f.brand}）` : f.flavor
+        ).join(' × '),
+        url: `${window.location.origin}/shisha/${id}`
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Web Share APIがサポートされていない場合
+        await navigator.clipboard.writeText(shareData.url);
+        alert('URLをクリップボードにコピーしました');
+      }
+    } catch (err) {
+      console.error('Error sharing review:', err);
+    }
   };
 
   return (
@@ -303,37 +330,49 @@ function FlavorListContent() {
           {reviews.map((review) => (
             <div 
               key={review.id} 
-              className="relative border p-4 rounded shadow-sm overflow-hidden"
-              onTouchStart={(e) => handleTouchStart(e, review.id)}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              className="border p-4 rounded shadow-sm"
             >
-              <div className={`transition-transform duration-300 ${swipedId === review.id ? '-translate-x-32' : ''}`}>
+              <div className="space-y-3">
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-bold">
                     {review.flavors.map(f => 
                       f.brand ? `${f.flavor}（${f.brand}）` : f.flavor
                     ).join(' × ')}
                   </h3>
-                  <span className="text-sm text-gray-500 sm:mr-32">{review.date}</span>
+                  <span className="text-sm text-gray-500">{review.date}</span>
                 </div>
-                <p>評価: {review.rating}/5</p>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">評価:</span>
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className={`text-xl ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                    ))}
+                  </div>
+                </div>
                 {review.memo && <p className="text-gray-600">{review.memo}</p>}
-              </div>
-              <div className={`absolute right-0 top-0 bottom-0 w-32 flex items-center justify-center gap-2 bg-red-100 transition-opacity duration-300 sm:opacity-100 sm:pointer-events-auto ${swipedId === review.id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <Link
-                  href={`/shisha/edit/${review.id}`}
-                  className="p-2 text-blue-500 hover:text-blue-700"
-                >
-                  <FaEdit />
-                </Link>
-                <div className="h-6 border-l border-gray-300"></div>
-                <button
-                  onClick={() => handleDelete(review.id)}
-                  className="p-2 text-red-500 hover:text-red-700"
-                >
-                  <FaTrash />
-                </button>
+                <div className="flex justify-center sm:justify-end gap-2 pt-2 border-t">
+                  <button
+                    onClick={() => handleShare(review.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    <FaShare className="text-sm" />
+                    <span>共有</span>
+                  </button>
+                  <Link
+                    href={`/shisha/edit/${review.id}`}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    <FaEdit className="text-sm" />
+                    <span>編集</span>
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(review.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                  >
+                    <FaTrash className="text-sm" />
+                    <span>削除</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
