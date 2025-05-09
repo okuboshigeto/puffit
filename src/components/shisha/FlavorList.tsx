@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import { useSession } from 'next-auth/react';
@@ -35,7 +35,7 @@ type FilterState = {
   sortOrder: 'asc' | 'desc';
 };
 
-export default function FlavorList() {
+function FlavorListContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -370,5 +370,25 @@ export default function FlavorList() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function FlavorList() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-4">
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="border p-4 rounded shadow-sm animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
+      <FlavorListContent />
+    </Suspense>
   );
 }
