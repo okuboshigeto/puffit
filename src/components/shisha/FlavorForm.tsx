@@ -104,7 +104,9 @@ export default function FlavorForm({ reviewId }: FlavorFormProps) {
         throw new Error(data.error || '保存に失敗しました');
       }
 
-      router.push('/shisha/list');
+      // キャッシュを無効化するためのクエリパラメータを追加
+      const timestamp = new Date().getTime();
+      router.push(`/shisha/list?t=${timestamp}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存に失敗しました');
       console.error(err);

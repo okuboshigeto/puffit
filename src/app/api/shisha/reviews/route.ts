@@ -31,38 +31,66 @@ export async function POST(request: Request) {
 }
 
 // レビュー一覧の取得
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const reviews = await prisma.shishaReview.findMany({
-      select: {
-        id: true,
-        reviewId: true,
-        rating: true,
-        memo: true,
-        date: true,
-        createdAt: true,
-        updatedAt: true,
-        flavors: true,
-        isPublic: true,
-        shareCount: true,
-        user: {
-          select: {
-            name: true,
-            image: true,
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+    const timestamp = searchParams.get('t');
+
+    const [reviews, total] = await Promise.all([
+      prisma.shishaReview.findMany({
+        select: {
+          id: true,
+          reviewId: true,
+          rating: true,
+          memo: true,
+          date: true,
+          createdAt: true,
+          updatedAt: true,
+          flavors: true,
+          isPublic: true,
+          shareCount: true,
+          user: {
+            select: {
+              name: true,
+              image: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.shishaReview.count()
+    ]);
 
-    return NextResponse.json(reviews)
+    const response = NextResponse.json({
+      reviews,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
+    // タイムスタンプがある場合はキャッシュを無効化
+    if (timestamp) {
+      response.headers.set('Cache-Control', 'no-store');
+    } else {
+      response.headers.set('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=59');
+    }
+    
+    return response;
   } catch (error) {
-    console.error('Error fetching reviews:', error)
+    console.error('Error fetching reviews:', error);
     return NextResponse.json(
       { error: 'Failed to fetch reviews' },
       { status: 500 }
-    )
+    );
   }
 } 
