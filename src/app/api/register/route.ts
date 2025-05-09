@@ -6,8 +6,7 @@ import crypto from "crypto"
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { email, name, password } = body
+    const { email, name, password } = await request.json()
 
     console.log("Registration attempt:", { email, name }) // デバッグ用ログ
 
@@ -19,40 +18,27 @@ export async function POST(request: Request) {
       )
     }
 
-    // メールアドレスの重複チェック（Userテーブル）
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
-    if (existingUser) {
+    // 本登録済みチェック
+    if (await prisma.user.findUnique({ where: { email } })) {
       return NextResponse.json(
         { error: "このメールアドレスは既に使用されています" },
         { status: 400 }
       )
     }
 
-    // メールアドレスの重複チェック（PendingUserテーブル）
-    const existingPending = await prisma.pendingUser.findUnique({
-      where: { email }
-    })
+    // 仮登録済みチェック
+    const existingPending = await prisma.pendingUser.findUnique({ where: { email } })
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24時間後
 
     if (existingPending) {
-      // トークンと有効期限を更新
       await prisma.pendingUser.update({
         where: { email },
-        data: {
-          verificationToken,
-          verificationTokenExpires,
-          // 必要なら他の情報も更新
-        }
+        data: { verificationToken, verificationTokenExpires }
       })
-
-      // 新しい認証メールを送信
       await sendVerificationEmail(email, verificationToken)
-
       return NextResponse.json({
-        message: "再度認証メールを送信しました。メールをご確認ください。"
+        message: "すでに仮登録されています。新しい認証メールを送信しましたので、メールボックスをご確認ください。"
       })
     }
 
@@ -60,14 +46,8 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 12)
 
     // 新規仮登録
-    const pendingUser = await prisma.pendingUser.create({
-      data: {
-        email,
-        name,
-        hashedPassword,
-        verificationToken,
-        verificationTokenExpires,
-      }
+    await prisma.pendingUser.create({
+      data: { email, name, hashedPassword, verificationToken, verificationTokenExpires }
     })
 
     // 認証メール送信

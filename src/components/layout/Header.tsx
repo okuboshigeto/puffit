@@ -12,6 +12,11 @@ export const Header = () => {
     return pathname.startsWith(path);
   };
 
+  // ログインしていない場合はヘッダーを表示しない
+  if (!session) {
+    return null;
+  }
+
   return (
     <header className="bg-white shadow-sm">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,45 +29,41 @@ export const Header = () => {
           </div>
 
           {/* メインメニュー */}
-          {session && (
-            <div className="flex space-x-8">
-              <Link
-                href="/shisha"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/shisha')
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                シーシャ
-              </Link>
-              <Link
-                href="/tobacco"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/tobacco')
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                タバコ
-              </Link>
-            </div>
-          )}
+          <div className="flex space-x-8">
+            <Link
+              href="/shisha"
+              className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                isActive('/shisha')
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              シーシャ
+            </Link>
+            <Link
+              href="/tobacco"
+              className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                isActive('/tobacco')
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              タバコ
+            </Link>
+          </div>
 
           {/* 右側のメニュー */}
           <div className="flex space-x-8">
-            {session && (
-              <Link
-                href="/profile"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/profile')
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                プロフィール
-              </Link>
-            )}
+            <Link
+              href="/profile"
+              className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                isActive('/profile')
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              プロフィール
+            </Link>
           </div>
         </div>
       </nav>

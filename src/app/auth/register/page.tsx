@@ -4,24 +4,49 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
+type RegisterFormData = {
+  email: string
+  name: string
+  password: string
+  confirmPassword: string
+}
+
+type RegisterResponse = {
+  message?: string
+  error?: string
+  details?: string
+}
+
 export default function Register() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  const validateForm = (data: RegisterFormData): string | null => {
+    if (data.password !== data.confirmPassword) {
+      return "パスワードが一致しません"
+    }
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
 
     const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const name = formData.get("name") as string
-    const password = formData.get("password") as string
-    const confirmPassword = formData.get("confirmPassword") as string
+    const data: RegisterFormData = {
+      email: formData.get("email") as string,
+      name: formData.get("name") as string,
+      password: formData.get("password") as string,
+      confirmPassword: formData.get("confirmPassword") as string,
+    }
 
-    if (password !== confirmPassword) {
-      setError("パスワードが一致しません")
+    const validationError = validateForm(data)
+    if (validationError) {
+      setError(validationError)
       setIsLoading(false)
       return
     }
@@ -33,20 +58,19 @@ export default function Register() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
-          name,
-          password,
+          email: data.email,
+          name: data.name,
+          password: data.password,
         }),
       })
 
-      const data = await response.json()
+      const responseData: RegisterResponse = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || data.details || "登録に失敗しました")
+        throw new Error(responseData.error || responseData.details || "登録に失敗しました")
       }
 
-      // 登録成功後、ログインページにリダイレクト
-      router.push("/auth/signin?registered=true")
+      setSuccess(responseData.message || "ご登録ありがとうございます。メールボックスを確認し、認証リンクをクリックしてください。")
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message)
@@ -136,6 +160,9 @@ export default function Register() {
 
           {error && (
             <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+          {success && (
+            <div className="text-green-500 text-sm text-center">{success}</div>
           )}
 
           <div>
