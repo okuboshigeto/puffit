@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { FaUser, FaEnvelope, FaLock, FaCamera, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaCamera, FaSignOutAlt, FaTrash } from 'react-icons/fa';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -15,6 +15,8 @@ export default function ProfilePage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -56,6 +58,39 @@ export default function ProfilePage() {
       } else {
         setError('プロフィールの更新中にエラーが発生しました');
       }
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/profile/delete', {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'アカウントの削除に失敗しました');
+      }
+
+      // アカウント削除後、ログアウトしてトップページにリダイレクト
+      await signOut({ callbackUrl: '/' });
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('アカウントの削除中にエラーが発生しました');
+      }
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -174,11 +209,47 @@ export default function ProfilePage() {
             </div>
           </form>
 
+          {/* アカウント削除セクション */}
+          <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
+            {showDeleteConfirm ? (
+              <div className="bg-red-50 p-4 rounded-md">
+                <p className="text-red-700 mb-4">
+                  アカウントを削除すると、すべてのデータが完全に削除され、復元できません。
+                  この操作は取り消せません。
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    disabled={isDeleting}
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? "削除中..." : "アカウントを削除"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleDeleteAccount}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 transition-colors"
+              >
+                <FaTrash />
+                アカウントを削除
+              </button>
+            )}
+          </div>
+
           {/* ログアウトボタン */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
+          <div className="mt-4">
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 transition-colors"
             >
               <FaSignOutAlt />
               ログアウト
