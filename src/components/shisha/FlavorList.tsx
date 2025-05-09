@@ -25,6 +25,16 @@ type PaginationInfo = {
   totalPages: number;
 };
 
+type FilterState = {
+  startDate: string;
+  endDate: string;
+  minRating: string;
+  maxRating: string;
+  searchFlavor: string;
+  sortBy: 'date' | 'rating';
+  sortOrder: 'asc' | 'desc';
+};
+
 export default function FlavorList() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -35,16 +45,39 @@ export default function FlavorList() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    startDate: '',
+    endDate: '',
+    minRating: '',
+    maxRating: '',
+    searchFlavor: '',
+    sortBy: 'date',
+    sortOrder: 'desc'
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchReviews(currentPage);
-  }, [currentPage, searchParams.get('t')]);
+  }, [currentPage, searchParams.get('t'), filters]);
 
   const fetchReviews = async (page: number) => {
     try {
       setIsLoading(true);
       const timestamp = searchParams.get('t');
-      const response = await fetch(`/api/shisha/reviews?page=${page}&limit=10${timestamp ? `&t=${timestamp}` : ''}`);
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        ...(timestamp && { t: timestamp }),
+        ...(filters.startDate && { startDate: filters.startDate }),
+        ...(filters.endDate && { endDate: filters.endDate }),
+        ...(filters.minRating && { minRating: filters.minRating }),
+        ...(filters.maxRating && { maxRating: filters.maxRating }),
+        ...(filters.searchFlavor && { searchFlavor: filters.searchFlavor }),
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder
+      });
+
+      const response = await fetch(`/api/shisha/reviews?${queryParams}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -68,6 +101,24 @@ export default function FlavorList() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFilterChange = (key: keyof FilterState, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setCurrentPage(1); // フィルター変更時は1ページ目に戻す
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      startDate: '',
+      endDate: '',
+      minRating: '',
+      maxRating: '',
+      searchFlavor: '',
+      sortBy: 'date',
+      sortOrder: 'desc'
+    });
+    setCurrentPage(1);
   };
 
   const handleDelete = async (id: string) => {
@@ -120,6 +171,117 @@ export default function FlavorList() {
 
   return (
     <div className="space-y-4">
+      <div className="bg-white p-4 rounded-lg shadow-sm">
+        <button
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className="w-full flex items-center justify-between text-gray-700 font-medium"
+        >
+          <span>絞り込み・ソート</span>
+          <span className="transform transition-transform duration-200">
+            {isFilterOpen ? '▲' : '▼'}
+          </span>
+        </button>
+
+        {isFilterOpen && (
+          <div className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">開始日</label>
+                <input
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">終了日</label>
+                <input
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">最小評価</label>
+                <select
+                  value={filters.minRating}
+                  onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">選択なし</option>
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <option key={num} value={num}>{num}点以上</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">最大評価</label>
+                <select
+                  value={filters.maxRating}
+                  onChange={(e) => handleFilterChange('maxRating', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">選択なし</option>
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <option key={num} value={num}>{num}点以下</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">フレーバー検索</label>
+              <input
+                type="text"
+                value={filters.searchFlavor}
+                onChange={(e) => handleFilterChange('searchFlavor', e.target.value)}
+                placeholder="フレーバー名で検索"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">並び順</label>
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) => handleFilterChange('sortBy', e.target.value as 'date' | 'rating')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="date">日付</option>
+                  <option value="rating">評価</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">順序</label>
+                <select
+                  value={filters.sortOrder}
+                  onChange={(e) => handleFilterChange('sortOrder', e.target.value as 'asc' | 'desc')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="desc">降順（新しい順/高い順）</option>
+                  <option value="asc">昇順（古い順/低い順）</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                フィルターをリセット
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className="text-red-500 text-sm text-center">{error}</div>
       )}
@@ -135,7 +297,7 @@ export default function FlavorList() {
           ))}
         </div>
       ) : reviews.length === 0 ? (
-        <p>まだ評価がありません。</p>
+        <p>条件に一致する評価がありません。</p>
       ) : (
         <>
           {reviews.map((review) => (

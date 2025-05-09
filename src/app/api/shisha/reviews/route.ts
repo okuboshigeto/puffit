@@ -38,9 +38,55 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
     const timestamp = searchParams.get('t');
+    
+    // 絞り込みパラメータ
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const minRating = searchParams.get('minRating');
+    const maxRating = searchParams.get('maxRating');
+    const searchFlavor = searchParams.get('searchFlavor');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+    // 絞り込み条件の構築
+    const where: any = {};
+    
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) where.date.gte = new Date(startDate);
+      if (endDate) where.date.lte = new Date(endDate);
+    }
+
+    if (minRating || maxRating) {
+      where.rating = {};
+      if (minRating) where.rating.gte = parseInt(minRating);
+      if (maxRating) where.rating.lte = parseInt(maxRating);
+    }
+
+    if (searchFlavor) {
+      where.flavors = {
+        some: {
+          flavorName: {
+            contains: searchFlavor,
+            mode: 'insensitive'
+          }
+        }
+      };
+    }
+
+    // ソート条件の設定
+    const orderBy: any = {};
+    if (sortBy === 'date') {
+      orderBy.date = sortOrder;
+    } else if (sortBy === 'rating') {
+      orderBy.rating = sortOrder;
+    } else {
+      orderBy.createdAt = 'desc';
+    }
 
     const [reviews, total] = await Promise.all([
       prisma.shishaReview.findMany({
+        where,
         select: {
           id: true,
           reviewId: true,
@@ -59,13 +105,11 @@ export async function GET(request: Request) {
             },
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
         skip,
         take: limit,
       }),
-      prisma.shishaReview.count()
+      prisma.shishaReview.count({ where })
     ]);
 
     const response = NextResponse.json({
@@ -78,7 +122,6 @@ export async function GET(request: Request) {
       }
     });
 
-    // タイムスタンプがある場合はキャッシュを無効化
     if (timestamp) {
       response.headers.set('Cache-Control', 'no-store');
     } else {
