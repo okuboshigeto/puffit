@@ -96,8 +96,16 @@ export default function FlavorForm({ reviewId }: FlavorFormProps) {
       return false;
     }
 
-    if (formData.flavors.some(f => !f.flavor.trim())) {
-      setError('フレーバー名は必須です');
+    if (!formData.flavors[0].flavor.trim()) {
+      setError('1つ目のフレーバー名は必須です');
+      return false;
+    }
+
+    const hasInvalidFlavor = formData.flavors.slice(1).some(f => 
+      f.flavor.trim() === '' && f.brand.trim() !== ''
+    );
+    if (hasInvalidFlavor) {
+      setError('フレーバー名を入力してください');
       return false;
     }
 
@@ -133,8 +141,8 @@ export default function FlavorForm({ reviewId }: FlavorFormProps) {
           flavors: formData.flavors
             .filter(f => f.flavor.trim() !== '')
             .map(f => ({
-              flavorName: f.flavor,
-              brand: f.brand || undefined
+              flavorName: f.flavor.trim(),
+              brand: f.brand?.trim() || null
             })),
           rating: formData.rating,
           memo: formData.memo,
@@ -175,7 +183,7 @@ export default function FlavorForm({ reviewId }: FlavorFormProps) {
                 value={item.flavor}
                 onChange={(e) => handleFlavorChange(index, 'flavor', e.target.value)}
                 className="border p-2 flex-1 rounded"
-                placeholder="フレーバー名"
+                placeholder={index === 0 ? "フレーバー名（必須）" : "フレーバー名（任意）"}
                 required={index === 0}
               />
             </div>

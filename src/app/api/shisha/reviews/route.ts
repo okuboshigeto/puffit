@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         rating,
         memo,
         flavors: flavors.map(f => ({
-          flavorName: f.flavor,
+          flavorName: f.flavorName,
           brand: f.brand || null
         }))
       }
@@ -62,9 +62,14 @@ export async function GET(request: Request) {
         where: {
           userId: session.user.id
         },
-        orderBy: {
-          date: 'desc'
-        },
+        orderBy: [
+          {
+            date: 'desc'
+          },
+          {
+            createdAt: 'desc'
+          }
+        ],
         include: {
           user: {
             select: {
