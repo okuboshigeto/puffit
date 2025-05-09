@@ -74,6 +74,11 @@ export interface AuthState {
   isLoading: boolean;
 }
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 // 通知関連の型
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 

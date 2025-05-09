@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import type { LoginCredentials } from "@/types/common"
 
 interface SignInFormProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -11,6 +12,10 @@ interface SignInFormProps {
 
 export default function SignInForm({ searchParams }: SignInFormProps) {
   const router = useRouter()
+  const [formData, setFormData] = useState<LoginCredentials>({
+    email: '',
+    password: '',
+  })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -21,20 +26,38 @@ export default function SignInForm({ searchParams }: SignInFormProps) {
     }
   }, [searchParams])
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const validateForm = (): boolean => {
+    if (!formData.email.trim()) {
+      setError("メールアドレスを入力してください")
+      return false
+    }
+    if (!formData.password.trim()) {
+      setError("パスワードを入力してください")
+      return false
+    }
+    return true
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
     setSuccess(null)
 
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
+    if (!validateForm()) {
+      setIsLoading(false)
+      return
+    }
 
     try {
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
         redirect: false,
       })
 
@@ -78,6 +101,8 @@ export default function SignInForm({ searchParams }: SignInFormProps) {
                 id="email"
                 name="email"
                 type="email"
+                value={formData.email}
+                onChange={handleChange}
                 autoComplete="email"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
@@ -92,6 +117,8 @@ export default function SignInForm({ searchParams }: SignInFormProps) {
                 id="password"
                 name="password"
                 type="password"
+                value={formData.password}
+                onChange={handleChange}
                 autoComplete="current-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
